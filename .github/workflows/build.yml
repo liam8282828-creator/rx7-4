@@ -1,0 +1,39 @@
+name: Compilar App iOS
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v4
+
+      - name: Compilar el proyecto (Build sin firma)
+        run: |
+          xcodebuild build \
+            -project ThreeOneOSFive.xcodeproj \
+            -scheme 3105 \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            CONFIGURATION_BUILD_DIR="${PWD}/build" \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Empaquetar en formato IPA
+        run: |
+          mkdir -p Payload
+          mv build/*.app Payload/
+          zip -r "${GITHUB_WORKSPACE}/aplicacion.ipa" Payload
+
+      - name: Subir Archivo IPA para descargar
+        uses: actions/upload-artifact@v4
+        with:
+          name: aplicacion-ios
+          path: aplicacion.ipa
